@@ -33,8 +33,8 @@ public class ApplicationSecurityConfig{
                 .csrf(csrf -> csrf.disable())
                 .authorizeRequests(auth -> {
                     auth.requestMatchers("/","index","/css/*", "/js/*").permitAll();
-                   auth.requestMatchers("/api/**").authenticated();
-                    auth.requestMatchers("/admin").authenticated();
+                    auth.requestMatchers("/api/**").hasRole(STUDENT.name());
+                    auth.requestMatchers("/admin").hasRole(ADMIN.name());
                 })
                 .httpBasic(Customizer.withDefaults())
                 .build();
@@ -55,6 +55,16 @@ public class ApplicationSecurityConfig{
                 .roles(ADMIN.name()) //ROLE_ADMIN
                 .build();
 
-        return new InMemoryUserDetailsManager(annaSmithUser,lindaUser);
+
+        UserDetails tomUser = User.builder()
+                .username("tom")
+                .password(passwordEncoder.encode("password123"))
+                .roles(ADMINTRAINEE.name()) //ROLE_ADMINTRAINEE
+                .build();
+
+        return new InMemoryUserDetailsManager(
+                annaSmithUser,
+                lindaUser,
+                tomUser);
     }
 }
