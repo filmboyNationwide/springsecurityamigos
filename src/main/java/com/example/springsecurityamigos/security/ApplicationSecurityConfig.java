@@ -44,22 +44,33 @@ public class ApplicationSecurityConfig{
         CsrfTokenRequestHandler requestHandler = delegate::handle;
 
         return http
+                .csrf(csrf -> csrf.disable())
+                //This version works!
+//                .csrf((csrf) -> csrf
+//                        .csrfTokenRepository(tokenRepository)
+//                        .csrfTokenRequestHandler(requestHandler)
+//                )
+//               This version created a CRSF token in the header, but it didn't work with the write requests.
+//                .csrf(csrf -> {
+//                    csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+//                })
                 .authorizeRequests(auth -> {
                     auth.requestMatchers("/","index","/css/*", "/js/*").permitAll();
                     auth.requestMatchers("/api/**").hasRole(STUDENT.name());
                     auth.requestMatchers("/admin").hasRole(ADMIN.name());
+                    //This is now done with annotations in the Controller
 //                    auth.requestMatchers(HttpMethod.DELETE,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
 //                    auth.requestMatchers(HttpMethod.POST,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
 //                    auth.requestMatchers(HttpMethod.PUT,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
 //                    auth.requestMatchers(HttpMethod.GET,"/management/api/**").hasAnyRole(ADMIN.name(), ADMINTRAINEE.name());
                 })
-                .csrf((csrf) -> csrf
-                        .csrfTokenRepository(tokenRepository)
-                        .csrfTokenRequestHandler(requestHandler)
-                )
-//                .csrf(csrf -> {
-//                    csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
-//                })
+                .formLogin(form -> {
+                    form
+                            .loginPage("/login")
+                            .permitAll()
+                            .defaultSuccessUrl("/courses", true);
+                })
+                .rememberMe(Customizer.withDefaults())
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
