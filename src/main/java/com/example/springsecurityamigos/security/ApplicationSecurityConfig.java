@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -12,12 +13,17 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestHandler;
+import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler;
 
+import static com.example.springsecurityamigos.security.ApplicationUserPermission.COURSE_WRITE;
 import static com.example.springsecurityamigos.security.ApplicationUserRole.*;
 
 @Configuration
 @EnableWebSecurity
 @EnableGlobalAuthentication
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig{
 
     private final PasswordEncoder passwordEncoder;
@@ -29,42 +35,63 @@ public class ApplicationSecurityConfig{
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception{
+        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        XorCsrfTokenRequestAttributeHandler delegate = new XorCsrfTokenRequestAttributeHandler();
+        // set the name of the attribute the CsrfToken will be populated on
+        delegate.setCsrfRequestAttributeName("_csrf");
+        // Use only the handle() method of XorCsrfTokenRequestAttributeHandler and the
+        // default implementation of resolveCsrfTokenValue() from CsrfTokenRequestHandler
+        CsrfTokenRequestHandler requestHandler = delegate::handle;
+
         return http
-                .csrf(csrf -> csrf.disable())
                 .authorizeRequests(auth -> {
                     auth.requestMatchers("/","index","/css/*", "/js/*").permitAll();
                     auth.requestMatchers("/api/**").hasRole(STUDENT.name());
                     auth.requestMatchers("/admin").hasRole(ADMIN.name());
+//                    auth.requestMatchers(HttpMethod.DELETE,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
+//                    auth.requestMatchers(HttpMethod.POST,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
+//                    auth.requestMatchers(HttpMethod.PUT,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
+//                    auth.requestMatchers(HttpMethod.GET,"/management/api/**").hasAnyRole(ADMIN.name(), ADMINTRAINEE.name());
                 })
+                .csrf((csrf) -> csrf
+                        .csrfTokenRepository(tokenRepository)
+                        .csrfTokenRequestHandler(requestHandler)
+                )
+//                .csrf(csrf -> {
+//                    csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+//                })
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
-
 
     @Bean
     public InMemoryUserDetailsManager userDetailsManager() {
         UserDetails annaSmithUser = User.builder()
                 .username("annasmith")
                 .password(passwordEncoder.encode("password"))
-                .roles(STUDENT.name())  //ROLE_STUDENT
+  //              .roles(STUDENT.name())  //ROLE_STUDENT
+                .authorities(STUDENT.getGrantedAuthorities())
                 .build();
 
         UserDetails lindaUser = User.builder()
                 .username("linda")
                 .password(passwordEncoder.encode("password123"))
-                .roles(ADMIN.name()) //ROLE_ADMIN
+//                .roles(ADMIN.name()) //ROLE_ADMIN
+                .authorities(ADMIN.getGrantedAuthorities())
                 .build();
 
 
         UserDetails tomUser = User.builder()
                 .username("tom")
                 .password(passwordEncoder.encode("password123"))
-                .roles(ADMINTRAINEE.name()) //ROLE_ADMINTRAINEE
+ //               .roles(ADMINTRAINEE.name()) //ROLE_ADMINTRAINEE
+                .authorities(ADMINTRAINEE.getGrantedAuthorities())
                 .build();
 
         return new InMemoryUserDetailsManager(
                 annaSmithUser,
                 lindaUser,
-                tomUser);
+                tomUser
+        );
     }
 }
