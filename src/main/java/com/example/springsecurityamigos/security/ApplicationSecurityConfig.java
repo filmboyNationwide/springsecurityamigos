@@ -1,6 +1,8 @@
 package com.example.springsecurityamigos.security;
 
 import com.example.springsecurityamigos.auth.ApplicationUserService;
+import com.example.springsecurityamigos.jwt.JwtTokenVerifier;
+import com.example.springsecurityamigos.jwt.JwtUsernameAndPasswordAuthenticationFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.SessionManagementConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -49,6 +53,10 @@ public class ApplicationSecurityConfig {
 
         return http
                 .csrf(csrf -> csrf.disable())
+                .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authentication -> authentication))
+                .addFilterAfter(new JwtTokenVerifier(), JwtUsernameAndPasswordAuthenticationFilter.class)
                 //This version works!
 //                .csrf((csrf) -> csrf
 //                        .csrfTokenRepository(tokenRepository)
@@ -68,29 +76,29 @@ public class ApplicationSecurityConfig {
 //                    auth.requestMatchers(HttpMethod.PUT,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
 //                    auth.requestMatchers(HttpMethod.GET,"/management/api/**").hasAnyRole(ADMIN.name(), ADMINTRAINEE.name());
                 })
-                .formLogin(form -> {
-                    form
-                            .loginPage("/login")
-                            .permitAll()
-                            .defaultSuccessUrl("/courses", true)
-                            .passwordParameter("password") //This allows you to change the name of the fields, must also be changed in login.html or wherever they are referenced
-                            .usernameParameter("username");
-                })
-                .rememberMe(remember -> {
-                    remember
-                            .rememberMeCookieName("remember-me")
-                            .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
-                            .key("somethingverysecured")
-                            .rememberMeParameter("remember-me");
-                })
-                .logout(logout -> {
-                    logout
-                            .logoutUrl("/logout")
-                            .logoutSuccessUrl("/login")
-                            .clearAuthentication(true)
-                            .invalidateHttpSession(true)
-                            .deleteCookies("JSESSIONID", "remember-me");
-                })
+//                .formLogin(form -> {
+//                    form
+//                            .loginPage("/login")
+//                            .permitAll()
+//                            .defaultSuccessUrl("/courses", true)
+//                            .passwordParameter("password") //This allows you to change the name of the fields, must also be changed in login.html or wherever they are referenced
+//                            .usernameParameter("username");
+//                })
+//                .rememberMe(remember -> {
+//                    remember
+//                            .rememberMeCookieName("remember-me")
+//                            .tokenValiditySeconds((int) TimeUnit.DAYS.toSeconds(21))
+//                            .key("somethingverysecured")
+//                            .rememberMeParameter("remember-me");
+//                })
+//                .logout(logout -> {
+//                    logout
+//                            .logoutUrl("/logout")
+//                            .logoutSuccessUrl("/login")
+//                            .clearAuthentication(true)
+//                            .invalidateHttpSession(true)
+//                            .deleteCookies("JSESSIONID", "remember-me");
+//                })
                 .httpBasic(Customizer.withDefaults())
                 .build();
     }
