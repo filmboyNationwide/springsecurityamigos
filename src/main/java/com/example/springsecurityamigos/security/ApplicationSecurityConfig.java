@@ -43,13 +43,13 @@ public class ApplicationSecurityConfig {
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception{
-        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        XorCsrfTokenRequestAttributeHandler delegate = new XorCsrfTokenRequestAttributeHandler();
-        // set the name of the attribute the CsrfToken will be populated on
-        delegate.setCsrfRequestAttributeName("_csrf");
-        // Use only the handle() method of XorCsrfTokenRequestAttributeHandler and the
-        // default implementation of resolveCsrfTokenValue() from CsrfTokenRequestHandler
-        CsrfTokenRequestHandler requestHandler = delegate::handle;
+//        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+//        XorCsrfTokenRequestAttributeHandler delegate = new XorCsrfTokenRequestAttributeHandler();
+//        // set the name of the attribute the CsrfToken will be populated on
+//        delegate.setCsrfRequestAttributeName("_csrf");
+//        // Use only the handle() method of XorCsrfTokenRequestAttributeHandler and the
+//        // default implementation of resolveCsrfTokenValue() from CsrfTokenRequestHandler
+//        CsrfTokenRequestHandler requestHandler = delegate::handle;
 
         return http
                 .csrf(csrf -> csrf.disable())

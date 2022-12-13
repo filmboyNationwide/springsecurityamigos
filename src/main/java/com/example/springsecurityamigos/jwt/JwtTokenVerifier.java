@@ -22,8 +22,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.fasterxml.jackson.databind.type.LogicalType.Map;
-
 public class JwtTokenVerifier extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -51,7 +49,7 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
 
             String username = body.getSubject();
 
-            var authorities = (List< java.util.Map <String,String>>) body.get("authorities");
+            var authorities = (List<Map <String,String>>) body.get("authorities");
 
            Set<SimpleGrantedAuthority> simpleGrantedAuthorities = authorities.stream()
                     .map(m -> new SimpleGrantedAuthority(m.get("authority")))
@@ -68,6 +66,8 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
         } catch (JwtException e){
             throw new IllegalStateException(String.format("Token %s cannot be trusted", token));
         }
+
+        filterChain.doFilter(request, response);
 
     }
 }

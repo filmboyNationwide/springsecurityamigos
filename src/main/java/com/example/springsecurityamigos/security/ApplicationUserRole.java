@@ -1,6 +1,7 @@
 package com.example.springsecurityamigos.security;
 
 import com.google.common.collect.Sets;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.Set;
@@ -30,7 +31,7 @@ public enum ApplicationUserRole {
         return permissions;
     }
 
-    public Set<SimpleGrantedAuthority> getGrantedAuthorities(){
+    public @NotNull Set<SimpleGrantedAuthority> getGrantedAuthorities(){
         Set<SimpleGrantedAuthority> permissions = getPermissions().stream()
                 .map(permission -> new SimpleGrantedAuthority(permission.getPermission()))
                 .collect(Collectors.toSet());
