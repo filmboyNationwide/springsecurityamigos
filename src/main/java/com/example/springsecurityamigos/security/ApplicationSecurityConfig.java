@@ -6,10 +6,10 @@ import com.example.springsecurityamigos.jwt.JwtUsernameAndPasswordAuthentication
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
-import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -25,10 +25,10 @@ import org.springframework.security.web.csrf.XorCsrfTokenRequestAttributeHandler
 import java.util.concurrent.TimeUnit;
 
 import static com.example.springsecurityamigos.security.ApplicationUserRole.*;
+import static org.springframework.security.config.Customizer.*;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalAuthentication
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class ApplicationSecurityConfig {
 
@@ -53,7 +53,7 @@ public class ApplicationSecurityConfig {
 
         return http
                 .csrf(csrf -> csrf.disable())
-                .sessionManagement(httpSecuritySessionManagementConfigurer -> httpSecuritySessionManagementConfigurer
+                .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilter(new JwtUsernameAndPasswordAuthenticationFilter(authentication -> authentication))
                 .addFilterAfter(new JwtTokenVerifier(), JwtUsernameAndPasswordAuthenticationFilter.class)
@@ -70,6 +70,7 @@ public class ApplicationSecurityConfig {
                     auth.requestMatchers("/","index","/css/*", "/js/*").permitAll();
                     auth.requestMatchers("/api/**").hasRole(STUDENT.name());
                     auth.requestMatchers("/admin").hasRole(ADMIN.name());
+                    auth.anyRequest().authenticated();
                     //This is now done with annotations in the Controller
 //                    auth.requestMatchers(HttpMethod.DELETE,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
 //                    auth.requestMatchers(HttpMethod.POST,"/management/api/**").hasAuthority(COURSE_WRITE.getPermission());
@@ -99,7 +100,7 @@ public class ApplicationSecurityConfig {
 //                            .invalidateHttpSession(true)
 //                            .deleteCookies("JSESSIONID", "remember-me");
 //                })
-                .httpBasic(Customizer.withDefaults())
+                //.httpBasic(withDefaults())
                 .build();
     }
 
